@@ -1,116 +1,174 @@
+# 🛴 CityScoot – Predicción de Demanda mediante Regresión Logística
+
+> Cómo elegir el modelo adecuado según el objetivo de negocio.
+
 ---
-# 🚲 CityScoot – Clasificación Binaria de Demanda
-## De Regresión Lineal a Regresión Logística (Framework de Decisión de Modelado)
+
+# 📌 Descripción del proyecto
+
+CityScoot, una empresa de micromovilidad urbana, busca anticipar la demanda diaria de scooters para optimizar la asignación de flota, la estrategia de precios y la planificación operativa.
+
+Inicialmente el problema se abordó como una tarea de **regresión**, con el objetivo de predecir el número exacto de viajes diarios. Sin embargo, el requerimiento de negocio evolucionó hacia un problema de **clasificación binaria**: identificar si un día presentará **alta** o **baja demanda**.
+
+Este proyecto muestra cómo la correcta elección del modelo depende del objetivo de negocio y justifica por qué la **Regresión Logística** resulta más adecuada que la Regresión Lineal para este caso.
+
 ---
 
-### Resumen Ejecutivo
+# 🎯 Objetivo de negocio
 
-#### CityScoot, empresa de micromovilidad urbana, busca anticipar el nivel de demanda diaria para optimizar la asignación de flota, la estrategia de precios y la planificación operativa.
+Clasificar cada día como:
 
-→ El enfoque analítico inicial consistía en predecir el número exacto de viajes diarios mediante regresión lineal. Sin embargo, el objetivo de negocio evolucionó: En lugar de predecir un valor exacto, el objetivo pasó a ser clasificar los días en Alta Demanda o Baja Demanda.
-→ Este proyecto demuestra la transición metodológica de un problema de regresión a uno de clasificación, justificando por qué la regresión logística es estadística y conceptualmente el modelo adecuado para la toma de decisiones binarias.
+- 🔴 **Alta demanda:** más de 1200 viajes
+- 🔵 **Baja demanda:** 1200 viajes o menos
 
-#### Objetivo de Negocio: Clasificar cada día como 🔴Alta Demanda → Más de 1200 viajes / 🔵Baja Demanda → 1200 viajes o menos
-#### El modelo debe estimar la probabilidad de que un día pertenezca a la categoría “Alta Demanda”.
+El modelo estima la probabilidad de que un día pertenezca a la categoría **Alta Demanda**, permitiendo anticipar decisiones operativas.
 
+---
 
-## Descripción del Dataset
+# 📊 Dataset
 
-### Datos operativos diarios que incluyen:
-- Temperatura (temp_c)
-- Lluvia (rain_mm)
-- Inversión en marketing (marketing_spend)
-- Precio por minuto (price_per_min)
-- Indicador de fin de semana (is_weekend)
-- Indicador de feriado (is_holiday)
-- Evento en la ciudad (city_event)
-- **Variable objetivo binaria: high_demand**
+El conjunto de datos contiene información diaria relacionada con la operación de CityScoot.
 
-🧠 Estrategia Analítica
+## Variables predictoras
 
-Aunque el enfoque inicial utilizaba regresión lineal, la variable objetivo es binaria. 
-Por lo tanto:
-- La regresión lineal optimiza MSE.
-- Los problemas de clasificación requieren modelado probabilístico.
-- La regresión logística optimiza log-loss.
+- Temperatura (`temp_c`)
+- Precipitación (`rain_mm`)
+- Inversión en marketing (`marketing_spend`)
+- Precio por minuto (`price_per_min`)
+- Fin de semana (`is_weekend`)
+- Feriado (`is_holiday`)
+- Evento en la ciudad (`city_event`)
 
-→ Este proyecto compara intencionalmente ambos enfoques para evidenciar la importancia de seleccionar el modelo correcto según el objetivo del negocio.
+## Variable objetivo
 
-→ Pipeline de Modelado
-Selección de variables relevantes:
-- División train-test (75/25)
-- Muestreo estratificado para mantener proporción de clases
-- Escalado de variables mediante StandardScaler
+- `high_demand`
 
-→ Primer modelo que se intentó = Regresión Lineal (Modelo Incorrecto para Clasificación).
-Se entrena una regresión lineal tratando el target binario como continuo y se detectan los siguientes problemas:
-- Predicciones fuera del rango [0,1]
-- Optimización de MSE (no apropiada para clasificación)
-- Interpretación probabilística inválida
-- Aunque puede arrojar un accuracy aparentemente aceptable con un umbral forzado, el modelo carece de coherencia estadística para clasificación.
+---
 
-→ Modelo Correcto = Regresión Logística
-- Produce probabilidades válidas
-- Optimiza log-loss
-- Permite interpretación mediante odds ratio
-- Es conceptualmente adecuada para decisiones binarias
+# 🧠 Estrategia analítica
 
-→ Se evaluaron las siguientes métricas: 
-- Log-loss → Calidad de las probabilidades estimadas
-- Accuracy → Proporción de clasificaciones correctas
-- Precision → Fiabilidad al predecir alta demanda
-- Recall → Capacidad de detectar días de alta demanda
-- ROC-AUC → Poder discriminativo global del modelo
-- Matriz de confusión → Estructura de errores
+El proyecto compara dos enfoques de modelado para evidenciar la importancia de seleccionar el algoritmo adecuado.
 
-→ Insights de Performance:
-- La regresión logística entrega probabilidades calibradas y coherentes.
-- El ROC-AUC muestra buena capacidad de separación entre clases.
-- El log-loss confirma calidad en la estimación probabilística.
-- Precision y recall permiten evaluar trade-offs operativos.
+## Regresión Lineal
 
-→ Esto habilita decisiones estratégicas como:
-- Reasignación anticipada de scooters
-- Ajuste dinámico de precios
-- Optimización del gasto en marketing
+Se entrenó inicialmente un modelo de Regresión Lineal tratando la variable objetivo como continua.
 
-→ Interpretación de Coeficientes (Enfoque de Negocio)
-→ Los coeficientes del modelo logístico se transformaron en odds ratio:
+Esto permitió identificar sus principales limitaciones:
 
-- 𝑂𝑑𝑑𝑠 𝑅𝑎𝑡𝑖𝑜= 𝑒𝛽 
-- Odds Ratio=eβ
+- Predicciones fuera del intervalo [0,1]
+- Optimización mediante Error Cuadrático Medio (MSE)
+- Probabilidades no válidas
+- Escasa interpretación para problemas de clasificación
 
-→ Esto permite interpretar: 
-- Cuánto aumenta la probabilidad de alta demanda ante mayor inversión en marketing.
-- Cómo impacta la lluvia en la probabilidad de alta demanda.
-- Qué efecto tienen fines de semana o eventos urbanos.
-- Este paso conecta el modelo estadístico con la toma de decisiones estratégicas.
+## Regresión Logística
 
-→ Impacto en Negocio - El modelo final permite:
-- Clasificación anticipada de días críticos
-- Optimización de recursos operativos
-- Mitigación de riesgos en picos de demanda
-- Toma de decisiones basada en probabilidad, no solo en estimaciones puntuales
-- La transición de regresión a clasificación alinea la técnica analítica con la necesidad real del negocio.
+Posteriormente se implementó un modelo de Regresión Logística, adecuado para clasificación binaria.
 
-**Aprendizaje Clave: El principal valor de este proyecto no es únicamente el rendimiento del modelo, sino la correcta selección metodológica.**
+Sus principales ventajas fueron:
 
-→ Demuestra:
-- Rigor conceptual
-- Comprensión estadística
-- Capacidad de traducir objetivos de negocio en decisiones técnicas
-- Madurez analítica
+- Probabilidades calibradas
+- Optimización mediante Log-Loss
+- Interpretación mediante Odds Ratio
+- Mejor alineación con el objetivo de negocio
 
-→ Tecnologías Utilizadas
+---
+
+# ⚙️ Pipeline de modelado
+
+- Selección de variables
+- División Train/Test (75/25)
+- Muestreo estratificado
+- Escalado con StandardScaler
+- Entrenamiento del modelo
+- Evaluación de desempeño
+- Interpretación de coeficientes
+
+---
+
+# 📈 Métricas evaluadas
+
+- Accuracy
+- Precision
+- Recall
+- ROC-AUC
+- Log-Loss
+- Matriz de confusión
+
+---
+
+# 💡 Principales resultados
+
+El modelo de Regresión Logística obtuvo probabilidades consistentes y una adecuada capacidad discriminativa entre días de alta y baja demanda.
+
+La evaluación permitió analizar distintos compromisos entre precisión y sensibilidad para apoyar decisiones operativas.
+
+---
+
+# 📊 Interpretación del modelo
+
+Los coeficientes fueron transformados a **Odds Ratios** para facilitar su interpretación.
+
+Esto permitió cuantificar el impacto de variables como:
+
+- inversión en marketing
+- lluvia
+- fines de semana
+- eventos urbanos
+
+sobre la probabilidad de registrar una jornada de alta demanda.
+
+---
+
+# 🚲 Impacto para el negocio
+
+El modelo permite:
+
+- anticipar días críticos
+- optimizar la asignación de scooters
+- ajustar estrategias de precios
+- optimizar campañas de marketing
+- reducir riesgos asociados a picos de demanda
+
+---
+
+# ⭐ Aprendizajes
+
+Más allá del desempeño predictivo, el principal aporte del proyecto fue demostrar la importancia de seleccionar el modelo estadístico adecuado según el problema de negocio.
+
+El trabajo evidencia:
+
+- comprensión conceptual de modelos supervisados
+- pensamiento estadístico
+- interpretación probabilística
+- traducción de resultados técnicos en decisiones de negocio
+
+---
+
+# 🛠️ Tecnologías utilizadas
+
 - Python
-- NumPy
 - Pandas
-- Matplotlib
+- NumPy
 - Scikit-learn
-
+- Matplotlib
 
 ---
-Vanina Cavallin.
-Autora: Dra. en Cs. Biológicas.
-Jr. Data Scientist.
+
+# 💼 Competencias demostradas
+
+- Clasificación binaria
+- Regresión Logística
+- Modelado probabilístico
+- Interpretación mediante Odds Ratio
+- Evaluación de modelos
+- Machine Learning aplicado
+- Storytelling con datos
+- Business Analytics
+
 ---
+
+## 👩‍💻 Autora
+
+**Vanina Cavallin**
+
+Doctora en Ciencias Biológicas | Jr. Data Scientist
